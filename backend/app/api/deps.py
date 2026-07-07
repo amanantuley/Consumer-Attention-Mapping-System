@@ -27,7 +27,7 @@ def get_current_user(
             detail="Could not validate credentials",
         )
     
-    user = db.query(User).filter(User.id == int(token_data_sub)).first()
+    user = db.query(User).filter(User.id == str(token_data_sub)).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -53,7 +53,24 @@ class RoleChecker:
         self,
         current_user: User = Depends(get_current_active_user)
     ) -> User:
-        if current_user.role not in self.allowed_roles:
+        import enum
+        user_role_str = current_user.role_id
+        
+        # Build set of matched allowed roles including legacy names
+        matched_roles = []
+        for role in self.allowed_roles:
+            r_str = role.value if isinstance(role, enum.Enum) else str(role)
+            matched_roles.append(r_str)
+            
+            # Map legacy equivalents
+            if r_str in ["administrator", "SuperAdmin", "admin"]:
+                matched_roles.extend(["administrator", "SuperAdmin", "admin"])
+            elif r_str in ["store_manager", "StoreManager"]:
+                matched_roles.extend(["store_manager", "StoreManager"])
+            elif r_str in ["retail_analyst", "Analyst", "analyst"]:
+                matched_roles.extend(["retail_analyst", "Analyst", "analyst"])
+                
+        if user_role_str not in matched_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions to access this resource"

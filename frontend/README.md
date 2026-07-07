@@ -1,3 +1,20 @@
+# CAMS Frontend (Next.js)
+
+Quickstart (local development):
+
+1. Install dependencies and run dev server (Windows PowerShell):
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+2. The app expects the backend at `http://localhost:8000` and uses the legacy `/api/v1` endpoints for the login flow in `src/app/page.tsx`. Update fetch URLs if your backend runs elsewhere.
+
+Notes:
+- Tailwind is configured (`tailwind.config.cjs`) and `src/app/globals.css` imports Tailwind.
+- UI uses `lucide-react` icons and Tailwind primitives — consider adding `shadcn/ui` components later for consistent tokens.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

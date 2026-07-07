@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.database import engine, SessionLocal
 from app.models.postgres import Base, User, UserRole
 from app.core.security import get_password_hash
-from app.api.endpoints import auth, stores, cameras, analytics, websockets
+from app.api.endpoints import auth, stores
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("cams.main")
@@ -33,10 +33,22 @@ def on_startup():
     logger.info("Initializing database schemas...")
     Base.metadata.create_all(bind=engine)
     
-    # Seed default administrator user if table is empty
+    # Seed roles and default administrator user if table is empty
     db = SessionLocal()
     try:
-        admin_user = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).first()
+        from app.models.postgres import Role
+        
+        # 1. Seed Roles if table is empty
+        if db.query(Role).count() == 0:
+            logger.info("Seeding Roles table (SuperAdmin, StoreManager, Analyst)...")
+            db.add_all([
+                Role(id="SuperAdmin", name="SuperAdmin"),
+                Role(id="StoreManager", name="StoreManager"),
+                Role(id="Analyst", name="Analyst")
+            ])
+            db.commit()
+            
+        admin_user = db.query(User).filter(User.email == "admin@cams.com").first()
         if not admin_user:
             logger.info("Seeding default Administrator user...")
             hashed_pwd = get_password_hash("adminpassword")
@@ -44,7 +56,7 @@ def on_startup():
                 email="admin@cams.com",
                 hashed_password=hashed_pwd,
                 full_name="System Administrator",
-                role=UserRole.ADMINISTRATOR,
+                role_id="SuperAdmin",
                 is_active=True
             )
             db.add(default_admin)
@@ -56,11 +68,11 @@ def on_startup():
         db.close()
 
 # Router Mounts
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication"])
-app.include_router(stores.router, prefix=f"{settings.API_V1_STR}/stores", tags=["Store Management"])
-app.include_router(cameras.router, prefix=f"{settings.API_V1_STR}/cameras", tags=["Camera Management"])
-app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics & Predictions"])
-app.include_router(websockets.router, prefix="/ws", tags=["Real-time Streaming WebSockets"])
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication Legacy V1"])
+app.include_router(auth.contract_router, prefix="/api/auth", tags=["Authentication Contract API"])
+
+app.include_router(stores.router, prefix=f"{settings.API_V1_STR}/stores", tags=["Store Management Legacy V1"])
+app.include_router(stores.contract_router, prefix="/api/stores", tags=["Store Management Contract API"])
 
 @app.get("/")
 def read_root():

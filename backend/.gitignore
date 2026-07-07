@@ -1,0 +1,26 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Logs and databases
+*.log
+cams.db
+test.db
+
+# dotenv
+.env
+
+# IDE
+.vscode/
+*.swp
+
+# OS
+Thumbs.db
+desktop.ini

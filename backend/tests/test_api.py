@@ -26,14 +26,22 @@ app.dependency_overrides[deps.get_db] = override_get_db
 
 @pytest.fixture(scope="module")
 def client():
-    # Seed a test user
+    # Seed roles and a test user
     db = TestingSessionLocal()
+    from app.models.postgres import Role
+    db.add_all([
+        Role(id="SuperAdmin", name="SuperAdmin"),
+        Role(id="StoreManager", name="StoreManager"),
+        Role(id="Analyst", name="Analyst")
+    ])
+    db.commit()
+    
     hashed_pwd = get_password_hash("testpassword")
     user = User(
         email="test_analyst@cams.com",
         hashed_password=hashed_pwd,
         full_name="Test Analyst",
-        role=UserRole.RETAIL_ANALYST,
+        role_id="Analyst",
         is_active=True
     )
     db.add(user)
@@ -69,27 +77,4 @@ def test_invalid_login(client):
     )
     assert response.status_code == 400
 
-def test_predict_conversion(client):
-    # Log in first to get token
-    login_resp = client.post(
-        "/api/v1/auth/login",
-        data={"username": "test_analyst@cams.com", "password": "testpassword"}
-    )
-    token = login_resp.json()["access_token"]
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    response = client.post(
-        "/api/v1/analytics/predict-conversion",
-        params={
-            "dwell_time": 150.0,
-            "gaze_duration": 60.0,
-            "zones_visited": 3,
-            "products_picked": 2
-        },
-        headers=headers
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "purchase_probability" in data
-    assert data["prediction"] in ["purchase", "no_purchase"]
-    assert "model_insights" in data
+

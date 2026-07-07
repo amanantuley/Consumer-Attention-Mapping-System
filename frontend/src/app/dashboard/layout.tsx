@@ -50,28 +50,10 @@ export default function DashboardLayout({
 
   const navItems: SidebarItem[] = [
     {
-      name: 'Executive Insights',
-      href: '/dashboard/analyst',
-      icon: <LayoutDashboard className="w-5 h-5" />,
-      roles: ['administrator', 'store_manager', 'retail_analyst', 'marketing_manager']
-    },
-    {
-      name: 'Manager Live CCTV',
-      href: '/dashboard/manager',
-      icon: <Camera className="w-5 h-5" />,
+      name: 'Store Layout Planner',
+      href: '/dashboard/layout-planner',
+      icon: <Map className="w-5 h-5" />,
       roles: ['administrator', 'store_manager']
-    },
-    {
-      name: 'Marketing Conversions',
-      href: '/dashboard/marketing',
-      icon: <BarChart3 className="w-5 h-5" />,
-      roles: ['administrator', 'marketing_manager', 'retail_analyst']
-    },
-    {
-      name: 'Admin Panel',
-      href: '/dashboard/admin',
-      icon: <Settings className="w-5 h-5" />,
-      roles: ['administrator']
     }
   ];
 

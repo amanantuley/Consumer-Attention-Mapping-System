@@ -28,11 +28,15 @@ def get_db():
         db.close()
 
 # Mock MongoDB fallback for offline host runs
+class MockCursor(list):
+    def limit(self, n):
+        return self
+
 class MockCollection:
     def insert_one(self, data):
         return None
     def find(self, *args, **kwargs):
-        return []
+        return MockCursor()
 
 class MockMongoDB:
     def __getattr__(self, name):

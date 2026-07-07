@@ -24,22 +24,7 @@ export default function LoginPage() {
   }, [isAuthenticated, user]);
 
   const redirectUser = (role: UserRole) => {
-    switch (role) {
-      case 'administrator':
-        router.push('/dashboard/admin');
-        break;
-      case 'store_manager':
-        router.push('/dashboard/manager');
-        break;
-      case 'retail_analyst':
-        router.push('/dashboard/analyst');
-        break;
-      case 'marketing_manager':
-        router.push('/dashboard/marketing');
-        break;
-      default:
-        router.push('/dashboard/analyst');
-    }
+    router.push('/dashboard');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +37,8 @@ export default function LoginPage() {
       formData.append('username', email);
       formData.append('password', password);
 
-      const res = await fetch('/api/v1/auth/login', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData,
@@ -66,7 +52,7 @@ export default function LoginPage() {
       const data = await res.json();
       
       // Fetch user profile info
-      const profileRes = await fetch('/api/v1/auth/me', {
+      const profileRes = await fetch(`${API_BASE}/api/v1/auth/me`, {
         headers: { 'Authorization': `Bearer ${data.access_token}` }
       });
       

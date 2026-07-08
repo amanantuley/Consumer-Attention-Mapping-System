@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { 
   Map, Plus, LayoutGrid, CheckCircle, Store as StoreIcon, 
@@ -25,8 +26,19 @@ interface ShelfObject {
 }
 
 export default function StoreLayoutPlanner() {
-  const { accessToken } = useAuthStore();
+  const router = useRouter();
+  const { user, accessToken, initialize } = useAuthStore();
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (user && user.role !== 'administrator' && user.role !== 'store_manager') {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
   const [stores, setStores] = useState<StoreLayout[]>([]);
   const [selectedStore, setSelectedStore] = useState<StoreLayout | null>(null);
   const [shelves, setShelves] = useState<ShelfObject[]>([]);
@@ -50,8 +62,10 @@ export default function StoreLayoutPlanner() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    fetchStores();
-  }, []);
+    if (accessToken) {
+      fetchStores();
+    }
+  }, [accessToken]);
 
   useEffect(() => {
     if (selectedStore) {
@@ -69,10 +83,11 @@ export default function StoreLayoutPlanner() {
   const fetchStores = async () => {
     setIsLoading(true);
     setErrorMsg('');
-    console.log('[layout-planner] fetchStores - accessToken:', accessToken);
+    const token = accessToken || localStorage.getItem('accessToken');
+    if (!token) return;
     try {
       const res = await fetch(`${API_BASE}/api/stores/`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to retrieve store layouts');
       const data = await res.json();
@@ -88,10 +103,11 @@ export default function StoreLayoutPlanner() {
   };
 
   const fetchShelves = async (storeId: string) => {
-    console.log('[layout-planner] fetchShelves - accessToken:', accessToken, 'storeId:', storeId);
+    const token = accessToken || localStorage.getItem('accessToken');
+    if (!token) return;
     try {
       const res = await fetch(`${API_BASE}/api/stores/${storeId}/shelves/`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
@@ -106,13 +122,13 @@ export default function StoreLayoutPlanner() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    const token = accessToken || localStorage.getItem('accessToken');
     try {
-      console.log('[layout-planner] handleCreateStore - accessToken:', accessToken);
       const res = await fetch(`${API_BASE}/api/stores/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           name: newStoreName,
@@ -151,13 +167,13 @@ export default function StoreLayoutPlanner() {
       [newShelfX2, newShelfY2]
     ];
 
+    const token = accessToken || localStorage.getItem('accessToken');
     try {
-      console.log('[layout-planner] handleCreateShelf - accessToken:', accessToken, 'selectedStore:', selectedStore?.layout_id);
       const res = await fetch(`${API_BASE}/api/stores/${selectedStore.layout_id}/shelves/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           shelf_name: newShelfName,

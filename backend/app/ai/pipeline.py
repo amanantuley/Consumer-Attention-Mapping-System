@@ -47,7 +47,7 @@ def broadcast_telemetry(session_uuid: str, data: dict):
     except Exception as e:
         pass
 
-def process_video_stream(camera_id: int, stream_source: str) -> dict:
+def process_video_stream(camera_id: str, stream_source: str) -> dict:
     """
     Core pipeline processing loop.
     Reads frames from stream_source, runs CV models, updates tracking, 

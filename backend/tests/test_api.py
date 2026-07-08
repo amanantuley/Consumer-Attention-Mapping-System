@@ -45,6 +45,15 @@ def client():
         is_active=True
     )
     db.add(user)
+    
+    manager = User(
+        email="test_manager@cams.com",
+        hashed_password=hashed_pwd,
+        full_name="Test Manager",
+        role_id="StoreManager",
+        is_active=True
+    )
+    db.add(manager)
     db.commit()
     db.close()
     
@@ -76,5 +85,63 @@ def test_invalid_login(client):
         data={"username": "test_analyst@cams.com", "password": "wrongpassword"}
     )
     assert response.status_code == 400
+
+def test_cameras_endpoints(client):
+    # Get auth token
+    login_res = client.post(
+        "/api/v1/auth/login",
+        data={"username": "test_manager@cams.com", "password": "testpassword"}
+    )
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. List cameras (should seed default cameras since db is empty)
+    res = client.get("/api/cameras/", headers=headers)
+    assert res.status_code == 200
+    data = res.json()
+    # If a store exists, it seeds default cameras. Since in testing db there are no stores, it returns empty
+    assert isinstance(data, list)
+
+    # 2. Add camera (should fail because store does not exist)
+    res = client.post(
+        "/api/cameras/",
+        json={"store_id": "non-existent-uuid", "name": "Test Cam", "rtsp_url": "0"},
+        headers=headers
+    )
+    assert res.status_code == 404
+
+def test_products_endpoints(client):
+    login_res = client.post(
+        "/api/v1/auth/login",
+        data={"username": "test_analyst@cams.com", "password": "testpassword"}
+    )
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. List products (should seed default products)
+    res = client.get("/api/products/", headers=headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) > 0
+    assert data[0]["name"] == "Coca-Cola 500ml"
+
+    # 2. Add product
+    res = client.post(
+        "/api/products/",
+        json={"name": "Pepsi 500ml", "sku": "PEPSI-500", "category": "Beverages", "price": 1.79, "stock": 40},
+        headers=headers
+      )
+    assert res.status_code == 200
+    p_data = res.json()
+    assert p_data["sku"] == "PEPSI-500"
+
+    # 3. Add product with existing SKU (should fail)
+    res = client.post(
+        "/api/products/",
+        json={"name": "Pepsi 500ml", "sku": "PEPSI-500", "category": "Beverages", "price": 1.79},
+        headers=headers
+    )
+    assert res.status_code == 400
+
 
 

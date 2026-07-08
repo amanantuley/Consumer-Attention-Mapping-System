@@ -21,7 +21,12 @@ app = FastAPI(
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, lock this down to frontend origin
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,12 +72,23 @@ def on_startup():
     finally:
         db.close()
 
+from app.api.endpoints import auth, stores, analytics, cameras, products
 # Router Mounts
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication Legacy V1"])
 app.include_router(auth.contract_router, prefix="/api/auth", tags=["Authentication Contract API"])
 
 app.include_router(stores.router, prefix=f"{settings.API_V1_STR}/stores", tags=["Store Management Legacy V1"])
 app.include_router(stores.contract_router, prefix="/api/stores", tags=["Store Management Contract API"])
+
+app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics V1"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics Contract API"])
+
+app.include_router(cameras.router, prefix=f"{settings.API_V1_STR}/cameras", tags=["Cameras V1"])
+app.include_router(cameras.router, prefix="/api/cameras", tags=["Cameras Contract API"])
+
+app.include_router(products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products V1"])
+app.include_router(products.router, prefix="/api/products", tags=["Products Contract API"])
+
 
 @app.get("/")
 def read_root():

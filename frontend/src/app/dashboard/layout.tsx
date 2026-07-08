@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore, UserRole } from '@/store/authStore';
 import { 
   LayoutDashboard, ShoppingBag, Eye, Map, LogOut, 
-  BarChart3, Settings, AlertTriangle, User as UserIcon, Camera
+  BarChart3, Settings, AlertTriangle, User as UserIcon, Camera,
+  Layers, FileText, Bell, Store
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -50,12 +51,61 @@ export default function DashboardLayout({
 
   const navItems: SidebarItem[] = [
     {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager', 'retail_analyst', 'marketing_manager']
+    },
+    {
+      name: 'Stores',
+      href: '/dashboard/manager',
+      icon: <Store className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager']
+    },
+    {
+      name: 'Shelves',
+      href: '/dashboard/shelves',
+      icon: <Layers className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager']
+    },
+    {
+      name: 'Products',
+      href: '/dashboard/analyst',
+      icon: <ShoppingBag className="w-5 h-5" />,
+      roles: ['administrator', 'retail_analyst', 'marketing_manager']
+    },
+    {
+      name: 'Cameras',
+      href: '/dashboard/admin',
+      icon: <Camera className="w-5 h-5" />,
+      roles: ['administrator']
+    },
+    {
       name: 'Store Layout Planner',
       href: '/dashboard/layout-planner',
       icon: <Map className="w-5 h-5" />,
       roles: ['administrator', 'store_manager']
+    },
+    {
+      name: 'Reports',
+      href: '/dashboard/reports',
+      icon: <FileText className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager', 'retail_analyst', 'marketing_manager']
+    },
+    {
+      name: 'Notifications',
+      href: '/dashboard/notifications',
+      icon: <Bell className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager', 'retail_analyst', 'marketing_manager']
+    },
+    {
+      name: 'Settings',
+      href: '/dashboard/settings',
+      icon: <Settings className="w-5 h-5" />,
+      roles: ['administrator', 'store_manager', 'retail_analyst', 'marketing_manager']
     }
   ];
+
 
   const currentRoleLabel = user.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 

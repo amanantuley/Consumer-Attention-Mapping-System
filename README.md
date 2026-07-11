@@ -1,111 +1,444 @@
-# Consumer Attention Mapping System (CAMS)
+# 🛒 Consumer Attention Mapping System (CAMS)
 
-Consumer Attention Mapping System (CAMS) is a production-grade, AI-powered Retail Intelligence Platform. Using state-of-the-art Computer Vision, Deep Learning, and Behavioral Analytics, it tracks and analyzes shopper behavior, physical movement paths, head pose rotations, eye gaze focuses, and shelf product interactions in real-time.
+> **AI-Powered Retail Intelligence Platform for Real-Time Consumer Behavior Analytics**
 
----
-
-## 1. System Architecture & Component Mapping
-
-CAMS is structured as a scalable, containerized enterprise microservices application:
-
-*   **Frontend**: Next.js 15 App Router interface styled with Tailwind CSS, using Zustand for global WebSocket telemetry buffering and Recharts for animated metrics.
-*   **Backend**: FastAPI Python web server orchestrating JWT authorization, WebSocket stream forwarding, and model evaluation.
-*   **Databases**: 
-    *   **PostgreSQL (SQLAlchemy)**: Core relational data (stores, zones, shelves, products, camera metadata, shopper sessions, converted purchases, and layout recommendations).
-    *   **MongoDB (Pymongo)**: High-frequency time-series coordinates (shopper movements, gaze vectors, grid occupancy counts).
-    *   **Redis**: Celery async message broker, WebSocket state channel, and API cache.
-*   **Streaming**: Apache Kafka topics distributing telemetry to offline consumers.
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![MongoDB](https://img.shields.io/badge/MongoDB-NoSQL-green)
+![Redis](https://img.shields.io/badge/Redis-Cache-red)
+![Kafka](https://img.shields.io/badge/Kafka-Streaming-black)
+![YOLOv11](https://img.shields.io/badge/YOLOv11-ComputerVision-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 2. Deep Dive: AI Pipeline & Mathematical Intuition
+# 🚀 Overview
+
+**Consumer Attention Mapping System (CAMS)** is a production-grade AI-powered **Retail Intelligence Platform** that analyzes customer movement, gaze direction, shelf interaction, and purchasing behavior using **Computer Vision, Deep Learning, Behavioral Analytics, and Real-Time Data Streaming**.
+
+The system transforms ordinary CCTV footage into actionable retail intelligence, enabling stores to optimize shelf layouts, improve customer engagement, and increase sales through AI-driven insights.
+
+---
+
+# 🎯 Key Features
+
+- 👥 Real-Time Shopper Detection
+- 📍 Multi-Object Tracking
+- 👀 Head Pose & Eye Gaze Estimation
+- 🛍️ Product Interaction Detection
+- 📊 Customer Heatmaps
+- 📈 Shopper Journey Analytics
+- 🧠 Behavioral Persona Classification
+- 📦 Shelf Performance Analytics
+- 🤖 AI Layout Recommendation Engine
+- 📡 Real-Time Dashboard
+- 🔐 Secure JWT Authentication
+- ⚡ Kafka Streaming Architecture
+
+---
+
+# 🏗️ System Architecture
 
 ```
-[ CCTV Stream ] ──> [ Preprocessing ] ──> [ YOLOv11 Shoppers/Products ]
-                                                    │
-                                                    ▼
-[ MediaPipe Gaze & FaceMesh ] ◄── [ SORT/ByteTrack Multi-Object Tracking ]
-              │
-              ▼
-[ Gaze Ray-Shelf Intersect ] ──> [ Hand-Product Collisions ] ──> [ Persona Classifiers ]
+                    CCTV Cameras
+                          │
+                          ▼
+                Frame Preprocessing
+                          │
+                          ▼
+             YOLOv11 Object Detection
+                          │
+                          ▼
+          ByteTrack / SORT Tracking
+                          │
+                          ▼
+        FaceMesh + Head Pose Estimation
+                          │
+                          ▼
+            Eye Gaze Direction Mapping
+                          │
+                          ▼
+          Product Interaction Detection
+                          │
+                          ▼
+      Shopper Behavior Classification
+                          │
+                          ▼
+        Recommendation & Analytics
+                          │
+          ┌───────────────┼────────────────┐
+          ▼               ▼                ▼
+    PostgreSQL        MongoDB          Kafka
+          │               │                │
+          └───────────────┼────────────────┘
+                          ▼
+                 FastAPI Backend API
+                          │
+                          ▼
+               Next.js Dashboard UI
 ```
-
-### Module 1: Preprocessing & Buffer Management
-*   **Operation**: Reads CCTV frames via OpenCV `VideoCapture`. Adjusts image resolutions, normalizes color matrices, and maintains frame buffering to match pipeline FPS constraints.
-*   **Math**: Normalizes image pixels $I_{norm} = \frac{I}{255.0}$ to stabilize gradients during deep network backprop.
-
-### Module 2: Person & SKU Detection (YOLOv11)
-*   **Operation**: Employs YOLO model backbones to extract bounding box coordinates for shoppers (`person`) and shelf products (`bottle`, `cup`, etc.).
-*   **Architecture**: CSPDarknet53 feature extraction with a Path Aggregation Network (PANet) neck and a decoupled anchor-free head.
-*   **Loss Formulation**: Complete IoU (CIoU) Loss for box regression and Binary Cross-Entropy (BCE) for class mapping.
-    $$\mathcal{L}_{CIoU} = 1 - IoU + \frac{\rho^2(b, b^{gt})}{c^2} + \alpha v$$
-    where $\rho(\cdot)$ is Euclidean distance of centers, $c$ is diagonal of minimum enclosing box, and $v$ measures aspect ratio consistency.
-
-### Module 3: Multi-Object Tracking (SORT / ByteTrack)
-*   **Operation**: Binds shopper bounding boxes across consecutive frames using Kalman filter velocity estimators and Hungarian matching.
-*   **Math**: State vector modeled as $x = [u, v, s, r, \dot{u}, \dot{v}, \dot{s}]^T$ representing bounding box horizontal/vertical centroids, area scale, aspect ratio, and linear velocities.
-
-### Module 5 & 6: Head Pose & Eye Gaze Estimation (MediaPipe FaceMesh)
-*   **Operation**: FaceMesh extracts 3d landmarks. Perspective-n-Point (solvePnP) projects 3D model points to 2D screen coordinates to determine Yaw, Pitch, and Roll. Gaze direction is computed from eye/iris landmark vectors.
-*   **PnP Projection Math**:
-    $$\mathbf{p} = \mathbf{K} [\mathbf{R} | \mathbf{t}] \mathbf{P}$$
-    where $\mathbf{P}$ is the 3D landmark, $\mathbf{p}$ is the 2D projected pixel, $\mathbf{K}$ is camera intrinsics, and $\mathbf{R}$ is the head rotation matrix.
-
-### Module 9: Behavioral Classifier (Random Forest)
-*   **Operation**: Classifies shopping sessions into profiles: *Explorer, Quick Buyer, Impulse Buyer, Comparison Shopper, Brand Loyal*.
-*   **Features**: `[dwell_time, zones_visited, gaze_focus_duration, products_picked, products_returned, products_purchased]`
-
-### Module 11: Machine Learning Recommendation Engine
-*   **Operation**: Scikit-Learn/Decision Tree regressor predicting layout optimization scores ($y_{score} \in [0, 1]$). Identifies dead shelves (high traffic, low purchase) and packaging bottlenecks (high gaze, low pickup).
 
 ---
 
-## 3. Quick Start & Execution
+# 🧠 AI Pipeline
 
-### Prerequisites
-*   Docker & Docker Compose
-*   Python 3.12+ (if running bare-metal)
+```
+CCTV Video
+      │
+      ▼
+Frame Preprocessing
+      │
+      ▼
+YOLOv11 Detection
+      │
+      ▼
+ByteTrack Tracking
+      │
+      ▼
+MediaPipe FaceMesh
+      │
+      ▼
+Head Pose Estimation
+      │
+      ▼
+Eye Gaze Estimation
+      │
+      ▼
+Shelf Mapping
+      │
+      ▼
+Hand Detection
+      │
+      ▼
+Product Interaction
+      │
+      ▼
+Behavior Classification
+      │
+      ▼
+Recommendation Engine
+```
 
-### Running with Docker Compose (Recommended)
-Build and run the entire CAMS platform including PostgreSQL, MongoDB, Redis, Kafka, Nginx, the Next.js UI, and the FastAPI backend:
+---
+
+# 🧩 Core AI Modules
+
+## 👤 Shopper Detection
+
+- YOLOv11
+- Real-time Person Detection
+- Product Detection
+- Bounding Box Regression
+- Confidence Scoring
+
+---
+
+## 🎯 Multi Object Tracking
+
+- ByteTrack
+- SORT
+- Kalman Filter
+- Hungarian Matching
+
+Tracks shoppers across multiple camera frames while maintaining unique identities.
+
+---
+
+## 👀 Head Pose Estimation
+
+Uses
+
+- MediaPipe FaceMesh
+- solvePnP
+- OpenCV
+
+Outputs
+
+- Yaw
+- Pitch
+- Roll
+
+---
+
+## 👁 Eye Gaze Estimation
+
+Determines
+
+- Looking Left
+- Looking Right
+- Looking Up
+- Looking Down
+- Shelf Focus
+
+Maps gaze vectors onto retail shelves.
+
+---
+
+## ✋ Product Interaction Detection
+
+Detects
+
+- Pick-up
+- Put-back
+- Hold Time
+- Shelf Touch
+- Purchase Intent
+
+---
+
+## 🧠 Behavioral Analytics
+
+Classifies customers into
+
+- Explorer
+- Quick Buyer
+- Comparison Shopper
+- Brand Loyal
+- Impulse Buyer
+
+Features Used
+
+- Dwell Time
+- Shelf Visits
+- Gaze Duration
+- Products Picked
+- Products Returned
+- Purchase Count
+
+---
+
+## 📈 Recommendation Engine
+
+Automatically identifies
+
+- Dead Shelves
+- High Attention / Low Conversion Products
+- Packaging Problems
+- Shelf Rearrangement Suggestions
+
+---
+
+# 🛠 Technology Stack
+
+## Frontend
+
+- Next.js 15
+- React
+- TypeScript
+- Tailwind CSS
+- Zustand
+- Recharts
+
+---
+
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- JWT Authentication
+- Pydantic
+- Celery
+
+---
+
+## AI & Machine Learning
+
+- YOLOv11
+- OpenCV
+- MediaPipe
+- Scikit-Learn
+- NumPy
+- Pandas
+- PyTorch
+
+---
+
+## Databases
+
+- PostgreSQL
+- MongoDB
+- Redis
+
+---
+
+## Streaming
+
+- Apache Kafka
+- WebSockets
+
+---
+
+## DevOps
+
+- Docker
+- Docker Compose
+- Nginx
+- GitHub Actions
+
+---
+
+# 📂 Project Structure
+
+```
+CAMS
+│
+├── frontend
+│
+├── backend
+│   ├── api
+│   ├── auth
+│   ├── database
+│   ├── services
+│   ├── models
+│   ├── routers
+│   └── utils
+│
+├── ai
+│   ├── detection
+│   ├── tracking
+│   ├── gaze
+│   ├── hand_detection
+│   ├── recommendation
+│   ├── behavior
+│   └── models
+│
+├── kafka
+├── docker
+├── nginx
+├── datasets
+├── docs
+├── tests
+└── scripts
+```
+
+---
+
+# 🚀 Quick Start
+
+## Clone Repository
+
+```bash
+git clone https://github.com/yourusername/CAMS.git
+
+cd CAMS
+```
+
+---
+
+## Run Entire Platform
 
 ```bash
 docker-compose up --build
 ```
 
-### Running Backend Locally
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Initialize virtual environment and install dependencies:
-   ```bash
-   python -m venv .venv
-   .venv/Scripts/pip install -r requirements.txt
-   ```
-3. Run the FastAPI application:
-   ```bash
-   .venv/Scripts/uvicorn app.main:app --reload
-   ```
+---
 
-### Running Frontend Locally
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install npm packages:
-   ```bash
-   npm install
-   ```
-3. Start the Next.js development server:
-   ```bash
-   npm run dev
-   ```
-4. Access the web interface at `http://localhost:3000` (or `http://localhost` if running through Nginx proxy).
-
-### Running Unit and Integration Tests
-Validate API routers, JWT logins, and behavioral predictions using `pytest` inside the backend directory:
+## Backend
 
 ```bash
-.venv/Scripts/pytest
+cd backend
+
+python -m venv .venv
+
+.venv/Scripts/pip install -r requirements.txt
+
+.venv/Scripts/uvicorn app.main:app --reload
 ```
+
+---
+
+## Frontend
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+---
+
+# 🧪 Testing
+
+```bash
+pytest
+```
+
+---
+
+# 📊 Dashboard
+
+The dashboard provides
+
+- Live CCTV Streams
+- Shopper Heatmaps
+- Zone Occupancy
+- Product Engagement
+- Shelf Analytics
+- Shopper Personas
+- AI Recommendations
+- Conversion Statistics
+
+---
+
+# 🔒 Security
+
+- JWT Authentication
+- Role-Based Access Control
+- HTTPS
+- Secure APIs
+- Input Validation
+- WebSocket Authentication
+
+---
+
+# 📈 Future Enhancements
+
+- Multi-Camera Tracking
+- Facial Age & Gender Estimation
+- Emotion Recognition
+- Queue Analytics
+- Inventory Monitoring
+- Retail Digital Twin
+- LLM-powered Retail Insights
+- Mobile Dashboard
+- Cloud Deployment (AWS)
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to your branch
+5. Open a Pull Request
+
+---
+
+# 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+# 👨‍💻 Author
+
+**Aman Antuley**
+
+Software Engineer • AI Engineer • Computer Vision Developer • Cloud & DevOps Enthusiast
+
+- GitHub: https://github.com/amanantuley
+- LinkedIn: https://www.linkedin.com/in/aman-antuley-8974ab26a/
+
+---
+
+⭐ If you found this project useful, please consider giving it a **Star**!
+
+**Transforming Retail with Artificial Intelligence & Computer Vision.**

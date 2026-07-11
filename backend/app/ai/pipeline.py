@@ -293,13 +293,13 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
                 db_sess = db.query(ShopperSession).filter(ShopperSession.id == db_session_id).first()
                 if db_sess:
                     db_sess.end_time = timestamp
-                    # Segment based on items conversion
-                    total_p = db.query(ProductInteraction).filter(
-                        ProductInteraction.session_id == db_session_id,
-                        ProductInteraction.interaction_type == "purchase"
-                    ).count()
-                    db_sess.segment = "Buyer" if total_p > 0 else "Browser"
                     db.commit()
+                    
+                    try:
+                        from app.ai.feature_extractor import SessionFeatureExtractor
+                        SessionFeatureExtractor.classify_and_update_session(db, session_uuid)
+                    except Exception as e:
+                        print(f"Error classifying session {session_uuid} on exit: {e}")
                 
                 publish_to_kafka(settings.KAFKA_ALERT_TOPIC, {
                     "event": "shopper_exit",

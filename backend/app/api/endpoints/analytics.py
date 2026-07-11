@@ -229,6 +229,26 @@ def predict_conversion(
             detail=f"Inference Engine error: {e}"
         )
 
+# ----------------- Shopper Classification -----------------
+@router.post("/sessions/{session_uuid}/classify")
+def classify_shopper_session(
+    session_uuid: str,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    """
+    Extracts structured behavioral features from MongoDB & PostgreSQL telemetry
+    for a shopper session, runs the ML classifier, updates the segment, and returns results.
+    """
+    try:
+        from app.ai.feature_extractor import SessionFeatureExtractor
+        result = SessionFeatureExtractor.classify_and_update_session(db, session_uuid)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Feature extraction / AI classification error: {str(e)}")
+
 # ----------------- Download Reports -----------------
 @router.get("/report/{store_id}")
 def download_store_report(

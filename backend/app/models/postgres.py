@@ -138,8 +138,10 @@ class ProductInteraction(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     session_id: Mapped[str] = mapped_column(String(36), ForeignKey("shopper_sessions.id"), nullable=False)
     product_id: Mapped[str] = mapped_column(String(36), ForeignKey("products.id"), nullable=False)
+    shelf_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("shelves.id"), nullable=True)
     interaction_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "gaze", "picked_up", "returned", "purchase"
     quantity: Mapped[int] = mapped_column(Integer, default=1)
+    duration_seconds: Mapped[float] = mapped_column(Float, default=0.0)
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class RecommendationType(str, enum.Enum):

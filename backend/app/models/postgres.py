@@ -160,3 +160,15 @@ class LayoutRecommendation(Base):
     is_applied: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+class CoordinateLog(Base):
+    __tablename__ = "coordinate_logs"
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    session_uuid: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    store_id: Mapped[str] = mapped_column(String(36), ForeignKey("stores.id"), nullable=False)
+    camera_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("cameras.id"), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    x: Mapped[float] = mapped_column(Float, nullable=False)
+    y: Mapped[float] = mapped_column(Float, nullable=False)
+    velocity: Mapped[float] = mapped_column(Float, default=0.0)
+

@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.core.database import mongo_db
-from app.models.postgres import ShopperSession, ProductInteraction, Shelf
+from app.models.postgres import ShopperSession, ProductInteraction, Shelf, CoordinateLog
 from app.ai.models_loader import model_loader
 from typing import Dict, Any, List
 
@@ -18,15 +18,15 @@ class SessionFeatureExtractor:
         if not session:
             raise ValueError(f"Session with uuid {session_uuid} not found")
 
-        # Query raw MongoDB collections
-        movement_records = list(mongo_db.shopper_movements.find({"session_uuid": session_uuid}))
+        # Query raw database tables
+        movement_records = db.query(CoordinateLog).filter(CoordinateLog.session_uuid == session_uuid).all()
         gaze_records = list(mongo_db.gaze_telemetry.find({"session_uuid": session_uuid}))
 
         # 1. Dwell time
         timestamps = []
         for r in movement_records:
-            if "timestamp" in r:
-                timestamps.append(r["timestamp"])
+            if r.timestamp:
+                timestamps.append(r.timestamp)
         for r in gaze_records:
             if "timestamp" in r:
                 timestamps.append(r["timestamp"])
@@ -70,8 +70,8 @@ class SessionFeatureExtractor:
         # Check movement coordinate intersections with shelves
         shelves = db.query(Shelf).filter(Shelf.store_id == session.store_id).all()
         for r in movement_records:
-            x = r.get("x")
-            y = r.get("y")
+            x = r.x
+            y = r.y
             if x is None or y is None:
                 continue
             for shelf in shelves:

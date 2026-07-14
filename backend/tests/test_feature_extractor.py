@@ -126,11 +126,27 @@ def test_feature_extraction_and_classification(db_session, client):
     db_session.add_all([pickup_interaction, purchase_interaction])
     db_session.commit()
 
-    # 3. Mock MongoDB movement and gaze telemetry
-    mock_movements = [
-        {"session_uuid": session_uuid, "timestamp": start_time, "x": 0.1, "y": 0.1, "velocity": 1.0},
-        {"session_uuid": session_uuid, "timestamp": start_time + timedelta(minutes=5), "x": 0.2, "y": 0.2, "velocity": 1.0}
-    ]
+    # 3. Add coordinate logs in SQL DB and Mock MongoDB gaze telemetry
+    from app.models.postgres import CoordinateLog
+    log1 = CoordinateLog(
+        session_uuid=session_uuid,
+        store_id=store.id,
+        timestamp=start_time,
+        x=0.1,
+        y=0.1,
+        velocity=1.0
+    )
+    log2 = CoordinateLog(
+        session_uuid=session_uuid,
+        store_id=store.id,
+        timestamp=start_time + timedelta(minutes=5),
+        x=0.2,
+        y=0.2,
+        velocity=1.0
+    )
+    db_session.add_all([log1, log2])
+    db_session.commit()
+
     mock_gaze = [
         {"session_uuid": session_uuid, "timestamp": start_time + timedelta(minutes=1), "focus_duration": 15.5, "target_id": product.id},
         {"session_uuid": session_uuid, "timestamp": start_time + timedelta(minutes=6), "focus_duration": 10.0, "target_id": product.id}
@@ -138,7 +154,6 @@ def test_feature_extraction_and_classification(db_session, client):
     
     with patch("app.ai.feature_extractor.mongo_db") as mock_db:
         # Configure mocks to return lists when find is called
-        mock_db.shopper_movements.find = MagicMock(return_value=mock_movements)
         mock_db.gaze_telemetry.find = MagicMock(return_value=mock_gaze)
         
         # Test feature extraction directly

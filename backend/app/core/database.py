@@ -66,6 +66,14 @@ class MockRedis:
     def publish(self, *args, **kwargs): return 0
     def ping(self): return True
     def pubsub(self, *args, **kwargs): return MockPubSub()
+    def xadd(self, *args, **kwargs): return "1-0"
+    def xread(self, *args, **kwargs): return []
+    def sadd(self, *args, **kwargs): return 1
+    def srem(self, *args, **kwargs): return 1
+    def scard(self, *args, **kwargs): return 0
+    def set(self, *args, **kwargs): return True
+    def get(self, *args, **kwargs): return None
+
 
 try:
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=1)

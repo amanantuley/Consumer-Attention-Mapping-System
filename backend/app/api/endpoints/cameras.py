@@ -176,3 +176,52 @@ def capture_live_frame(
         if cap and cap.isOpened():
             cap.release()
         raise HTTPException(status_code=500, detail=f"AI capturing error: {str(e)}")
+
+@router.post("/simulation/start")
+def start_simulation(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    from app.core.database import redis_client
+    redis_client.set("simulation_active", "true")
+    
+    # Fetch all cameras to start their streams
+    cameras = db.query(Camera).filter(Camera.is_active == True).all()
+    
+    # Trigger a background thread or task for each camera stream
+    import threading
+    from app.ai.pipeline import process_video_stream
+    
+    active_threads = []
+    for cam in cameras:
+        t = threading.Thread(target=process_video_stream, args=(cam.id, "simulation"), name=f"SimCamera-{cam.name}")
+        t.daemon = True
+        t.start()
+        active_threads.append(cam.name)
+        
+    return {
+        "status": "started",
+        "active_cameras": active_threads
+    }
+
+@router.post("/simulation/stop")
+def stop_simulation(
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    from app.core.database import redis_client
+    redis_client.set("simulation_active", "false")
+    return {
+        "status": "stopped"
+    }
+
+@router.get("/simulation/status")
+def get_simulation_status():
+    from app.core.database import redis_client
+    try:
+        active = redis_client.get("simulation_active") == "true"
+    except Exception:
+        active = False
+    return {
+        "active": active
+    }
+

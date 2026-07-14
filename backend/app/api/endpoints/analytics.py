@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.api import deps
-from app.models.postgres import User, UserRole, ShopperSession, ProductInteraction, StoreZone, Shelf, Product, LayoutRecommendation, RecommendationType
+from app.models.postgres import User, UserRole, ShopperSession, ProductInteraction, StoreZone, Shelf, Product, LayoutRecommendation, RecommendationType, CoordinateLog
 from app.core.database import mongo_db
 
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 # ----------------- Store & Shelf KPIs -----------------
 @router.get("/kpis/{store_id}")
 def get_store_kpis(
-    store_id: int,
+    store_id: str,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
@@ -66,28 +66,29 @@ def get_store_kpis(
 # ----------------- Heatmap Aggregators -----------------
 @router.get("/heatmaps/{store_id}")
 def get_store_heatmap(
-    store_id: int,
+    store_id: str,
     heatmap_type: str = "movements", # movements or gaze
-    zone_id: Optional[int] = None,
+    zone_id: Optional[str] = None,
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
     """
-    Fetches raw tracking coordinates from MongoDB and aggregates them into density grid format.
+    Fetches raw tracking coordinates from database and aggregates them into density grid format.
     """
-    # Query MongoDB for movement coordinates
-    query = {"store_id": store_id}
+    points_source = []
     if heatmap_type == "movements":
-        collection = mongo_db.shopper_movements
+        # Query postgres/timescaledb coordinate logs
+        records = db.query(CoordinateLog).filter(CoordinateLog.store_id == store_id).limit(1000).all()
+        points_source = [{"x": r.x, "y": r.y} for r in records]
     else:
-        # For gaze heatmaps
-        collection = mongo_db.gaze_telemetry
-        query = {} # Simpler query for gaze telemetry
+        # Query MongoDB for gaze telemetry
+        query = {}
+        records = list(mongo_db.gaze_telemetry.find(query).limit(1000))
+        points_source = [{"x": r.get("x", 0.0), "y": r.get("y", 0.0)} for r in records]
         
-    records = list(collection.find(query).limit(1000))
-    
     # Aggregate into a 10x10 density matrix
     grid = np.zeros((10, 10), dtype=int)
-    for r in records:
+    for r in points_source:
         x, y = r.get("x", 0.0), r.get("y", 0.0)
         # Clamp between 0.0 and 1.0
         grid_x = min(9, max(0, int(x * 10)))
@@ -116,7 +117,7 @@ def get_store_heatmap(
 # ----------------- Layout Recommendation Engine -----------------
 @router.get("/recommendations/{store_id}", response_model=List[Dict[str, Any]])
 def get_recommendations(
-    store_id: int,
+    store_id: str,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
@@ -252,7 +253,7 @@ def classify_shopper_session(
 # ----------------- Download Reports -----------------
 @router.get("/report/{store_id}")
 def download_store_report(
-    store_id: int,
+    store_id: str,
     format: str = "pdf",  # pdf, csv, excel
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)

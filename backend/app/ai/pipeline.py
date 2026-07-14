@@ -90,10 +90,15 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
         is_live = stream_source.startswith("rtsp://")
         
         # Fallback to simulated frames if source fails (ensures mock stream runs correctly)
-        use_simulation = not cap.isOpened()
+        use_simulation = not cap.isOpened() or stream_source == "simulation"
         if use_simulation:
-            print(f"Could not open source {stream_source}. Simulating pipeline stream...")
-            total_frames = 100
+            print(f"Targeting simulation source {stream_source}. Simulating pipeline stream...")
+            # If simulation is active, run for a long duration (about 1 hour at 30 FPS)
+            try:
+                active_val = redis_client.get("simulation_active")
+            except Exception:
+                active_val = "true"
+            total_frames = 100000 if active_val == "true" else 100
             frame_width, frame_height = 1280, 720
         else:
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not is_live else 10000
@@ -106,6 +111,14 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
         active_sessions = {}  # track_id: session_uuid
         
         while frame_idx < total_frames:
+            # Check if simulation was stopped
+            if use_simulation and total_frames > 100:
+                try:
+                    if redis_client.get("simulation_active") != "true":
+                        print("Simulation stopped by control key.")
+                        break
+                except Exception:
+                    pass
             timestamp = datetime.utcnow()
             
             if use_simulation:
@@ -119,7 +132,7 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
                     break
                     
             # 1. Person Detection & Tracking
-            person_dets = person_detector.detect(frame)
+            person_dets = person_detector.detect(frame, camera_name=camera.name)
             shopper_tracks = tracker.update(person_dets)
             
             # 2. Product and Hand gesture detection
@@ -150,6 +163,13 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
                         "db_id": db_session.id
                     }
                     
+                    # Update live store occupancy in Redis
+                    try:
+                        redis_client.sadd(f"store:{store_id}:occupancy", session_uuid)
+                        redis_client.set(f"store:{store_id}:occupancy_count", str(redis_client.scard(f"store:{store_id}:occupancy")))
+                    except Exception:
+                        pass
+                    
                     publish_to_kafka(settings.KAFKA_ALERT_TOPIC, {
                         "event": "shopper_entry",
                         "session_uuid": session_uuid,
@@ -164,15 +184,20 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
                 cx = (bbox[0] + bbox[2]) / 2.0
                 cy = (bbox[1] + bbox[3]) / 2.0
                 
-                # Log movements to MongoDB
-                mongo_db.shopper_movements.insert_one({
-                    "session_uuid": session_uuid,
-                    "store_id": store_id,
-                    "timestamp": timestamp,
-                    "x": cx / frame_width,
-                    "y": cy / frame_height,
-                    "velocity": 1.2
-                })
+                # Log movements to Redis Stream instead of MongoDB
+                try:
+                    redis_client.xadd("stream:shopper_movements", {
+                        "session_uuid": session_uuid,
+                        "store_id": str(store_id),
+                        "camera_id": str(camera_id),
+                        "timestamp": timestamp.isoformat(),
+                        "x": str(cx / frame_width),
+                        "y": str(cy / frame_height),
+                        "velocity": "1.2"
+                    })
+                except Exception as e:
+                    print(f"Error writing to Redis Stream: {e}")
+
                 
                 # 4. Gaze Estimation
                 # Crop face bounding box for head pose estimation
@@ -307,6 +332,13 @@ def process_video_stream(camera_id: str, stream_source: str) -> dict:
                     "timestamp": timestamp.isoformat(),
                     "store_id": store_id
                 })
+                
+                # Remove session from Redis occupancy Set
+                try:
+                    redis_client.srem(f"store:{store_id}:occupancy", session_uuid)
+                    redis_client.set(f"store:{store_id}:occupancy_count", str(redis_client.scard(f"store:{store_id}:occupancy")))
+                except Exception:
+                    pass
                 
                 del active_sessions[track_id]
                 

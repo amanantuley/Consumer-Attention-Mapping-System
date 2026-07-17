@@ -127,6 +127,14 @@ def on_startup():
     finally:
         db.close()
 
+@app.on_event("shutdown")
+def on_shutdown():
+    logger.info("Stopping background services...")
+    try:
+        from app.core.stream_worker import stop_stream_worker
+        stop_stream_worker()
+    except Exception as e:
+        logger.error(f"Error stopping stream worker: {e}")
 
 from app.api.endpoints import auth, stores, analytics, cameras, products
 # Router Mounts

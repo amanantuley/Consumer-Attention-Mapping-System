@@ -16,6 +16,12 @@ def save_batch(db: Session, batch: list):
         db.rollback()
         print(f"Failed to bulk save coordinates: {e}")
 
+should_stop = False
+
+def stop_stream_worker():
+    global should_stop
+    should_stop = True
+
 def run_sync_consumer():
     """
     Synchronous consumer loop.
@@ -35,7 +41,7 @@ def run_sync_consumer():
     
     print("Stream worker synchronous loop started...")
     
-    while True:
+    while not should_stop:
         try:
             # Read from Redis stream (block up to 1000ms)
             streams = redis_client.xread({"stream:shopper_movements": last_id}, count=100, block=1000)
@@ -83,11 +89,19 @@ def run_sync_consumer():
             # If Redis or database fails, log and retry
             print(f"Error in stream worker loop: {e}")
             time.sleep(2)
+            
+    # Flush remaining batch on shutdown
+    if batch:
+        save_batch(db, batch)
+    db.close()
+    print("Stream worker stopped cleanly.")
 
 def start_stream_worker_async():
     """
     Starts the stream worker in a daemon thread.
     """
+    global should_stop
+    should_stop = False
     import threading
     t = threading.Thread(target=run_sync_consumer, name="StreamWorker", daemon=True)
     t.start()
@@ -95,3 +109,4 @@ def start_stream_worker_async():
 
 if __name__ == "__main__":
     run_sync_consumer()
+

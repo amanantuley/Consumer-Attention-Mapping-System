@@ -1,78 +1,40 @@
-from typing import Generator, List
+from typing import Generator, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-import jwt
-from sqlalchemy.orm import Session
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session, selectinload
+from ..core.database import get_db
+from ..core.config import get_settings
+from ..models.user import User
+from ..schemas.user import TokenData
 
-from app.core.config import settings
-from app.core.security import decode_token
-from app.core.database import get_db, get_mongo_db, get_redis_client
-from app.models.postgres import User, UserRole
+settings = get_settings()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
-)
 
 def get_current_user(
-    db: Session = Depends(get_db),
-    token: str = Depends(reusable_oauth2)
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User:
-    payload = decode_token(token)
-    token_data_sub = payload.get("sub")
-    token_data_type = payload.get("type")
-    
-    if not token_data_sub or token_data_type != "access":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-    
-    user = db.query(User).filter(User.id == str(token_data_sub)).first()
-    if not user:
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = TokenData(email=email)
+    except JWTError:
+        raise credentials_exception
+    user = db.query(User).options(selectinload(User.role)).filter(User.email == token_data.email).first()
+    if user is None:
+        raise credentials_exception
+    if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
         )
     return user
-
-def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
-        )
-    return current_user
-
-class RoleChecker:
-    def __init__(self, allowed_roles: List[UserRole]):
-        self.allowed_roles = allowed_roles
-
-    def __call__(
-        self,
-        current_user: User = Depends(get_current_active_user)
-    ) -> User:
-        import enum
-        user_role_str = current_user.role_id
-        
-        # Build set of matched allowed roles including legacy names
-        matched_roles = []
-        for role in self.allowed_roles:
-            r_str = role.value if isinstance(role, enum.Enum) else str(role)
-            matched_roles.append(r_str)
-            
-            # Map legacy equivalents
-            if r_str in ["administrator", "SuperAdmin", "admin"]:
-                matched_roles.extend(["administrator", "SuperAdmin", "admin"])
-            elif r_str in ["store_manager", "StoreManager"]:
-                matched_roles.extend(["store_manager", "StoreManager"])
-            elif r_str in ["retail_analyst", "Analyst", "analyst"]:
-                matched_roles.extend(["retail_analyst", "Analyst", "analyst"])
-                
-        if user_role_str not in matched_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to access this resource"
-            )
-        return current_user

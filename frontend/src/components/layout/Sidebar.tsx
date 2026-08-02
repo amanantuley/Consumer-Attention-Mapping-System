@@ -31,12 +31,7 @@ const Sidebar: React.FC = () => {
       title: "Dashboard",
       href: `/dashboard/${user?.role.name.toLowerCase().replace(" ", "-")}`,
       icon: LayoutDashboard,
-      allowedRoles: [
-        "Administrator",
-        "Store Manager",
-        "Retail Analyst",
-        "Marketing Manager",
-      ],
+      allowedRoles: ["Administrator", "Store Manager", "Retail Analyst", "Marketing Manager"],
     },
     {
       title: "Stores",
@@ -72,67 +67,68 @@ const Sidebar: React.FC = () => {
     <div className="flex">
       <div
         className={cn(
-          "bg-white border-r h-screen transition-all duration-300 fixed md:relative z-50",
-          isOpen ? "w-64" : "w-20"
+          "fixed z-50 h-screen border-r border-white/10 bg-slate-950/80 backdrop-blur-2xl transition-all duration-300 md:relative",
+          isOpen ? "w-72" : "w-20"
         )}
       >
-        <div className="p-4 flex items-center justify-between border-b">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-5">
           <div className={cn("flex items-center", !isOpen && "justify-center")}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Video className="w-6 h-6 text-white" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_18px_50px_-18px_rgba(34,211,238,0.75)]">
+              <Video className="h-5 w-5 text-white" />
             </div>
             {isOpen && (
-              <span className="ml-3 font-bold text-lg text-gray-800">
-                Attention Mapping
-              </span>
+              <div className="ml-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-400">SignalOS</p>
+                <p className="text-sm font-semibold text-slate-100">Attention Mapping</p>
+              </div>
             )}
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1 rounded-md hover:bg-gray-100 md:hidden"
+            className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 hover:text-white md:hidden"
           >
-            {isOpen ? <X /> : <Menu />}
+            {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-        <nav className="mt-8 px-3">
+
+        <nav className="mt-6 space-y-1 px-3">
           {filteredItems.map((item) => {
             const isActive = location.pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center px-3 py-3 rounded-lg mb-2 transition-colors",
+                  "flex items-center rounded-2xl px-3 py-3 text-sm font-medium transition-all",
                   isActive
-                    ? "bg-blue-50 text-blue-600 font-medium"
-                    : "text-gray-600 hover:bg-gray-100",
+                    ? "bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-300 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
                   !isOpen && "justify-center"
                 )}
               >
-                <item.icon className="w-5 h-5" />
+                <Icon className="h-5 w-5" />
                 {isOpen && <span className="ml-3">{item.title}</span>}
               </Link>
             );
           })}
         </nav>
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+
+        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4">
           <button
             onClick={logout}
             className={cn(
-              "flex items-center w-full px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors",
+              "flex w-full items-center rounded-2xl px-3 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10",
               !isOpen && "justify-center"
             )}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="h-5 w-5" />
             {isOpen && <span className="ml-3">Log Out</span>}
           </button>
         </div>
       </div>
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-40"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-slate-950/60 md:hidden" onClick={() => setIsOpen(false)} />
       )}
     </div>
   );

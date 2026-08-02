@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const isDashboardRoute = location.pathname.startsWith("/dashboard/");
 
   return (
-    <div className="min-h-screen bg-[#070e17]">
+    <div className="min-h-screen bg-transparent text-slate-100">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -31,8 +31,10 @@ const App: React.FC = () => {
                 <div className="flex-1">
                   <Suspense
                     fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <div className="text-lg text-gray-600">Loading...</div>
+                      <div className="flex min-h-screen items-center justify-center">
+                        <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-6 py-4 text-sm font-medium text-slate-300 shadow-[0_24px_80px_-28px_rgba(2,6,23,0.95)] backdrop-blur-2xl">
+                          Preparing your workspace...
+                        </div>
                       </div>
                     }
                   >

@@ -68,22 +68,34 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(167,139,250,0.18),_transparent_26%),linear-gradient(135deg,#020617_0%,#0f172a_50%,#111827_100%)] p-4">
-      <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:36px_36px]" />
-      <Card className="relative w-full max-w-lg border-white/10 bg-slate-900/70 shadow-[0_30px_90px_-30px_rgba(2,6,23,0.95)] backdrop-blur-2xl">
-        <CardHeader className="space-y-3 text-center">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(167,139,250,0.18),_transparent_26%),linear-gradient(135deg,#020617_0%,#0f172a_50%,#111827_100%)] p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.18),transparent_0%),radial-gradient(circle_at_80%_10%,rgba(168,85,247,0.14),transparent_0%)]" />
+      <div className="pointer-events-none absolute left-8 top-1/4 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute right-8 bottom-24 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
+      <Card className="relative w-full max-w-lg border-white/10 bg-slate-900/75 shadow-[0_30px_90px_-30px_rgba(2,6,23,0.95)] backdrop-blur-2xl">
+        <CardHeader className="space-y-4 text-center px-8 pt-10">
           <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_18px_50px_-18px_rgba(34,211,238,0.75)]">
-              <Sparkles className="h-7 w-7 text-white" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_18px_50px_-18px_rgba(34,211,238,0.75)]">
+              <Sparkles className="h-8 w-8 text-white" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-2xl font-semibold text-white">Create your account</CardTitle>
-            <CardDescription className="mt-2 text-sm text-slate-400">Start monitoring, planning, and optimizing attention in one elegant workspace</CardDescription>
+            <CardTitle className="text-3xl font-semibold text-white">Create your account</CardTitle>
+            <CardDescription className="mt-3 text-sm leading-6 text-slate-400">Join the attention intelligence suite with secure role management and operational insights.</CardDescription>
+          </div>
+          <div className="mx-auto mt-4 flex max-w-sm flex-col gap-3 text-left text-sm text-slate-300">
+            <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+              <p className="font-semibold text-slate-100">Modern analytics access</p>
+              <p className="text-slate-400">Scale with secure team roles and instant store visibility.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+              <p className="font-semibold text-slate-100">Designed for operations</p>
+              <p className="text-slate-400">A polished dashboard experience for administrators, managers, and analysts.</p>
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="px-8 pb-10 pt-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-slate-300">Username</Label>

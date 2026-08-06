@@ -122,16 +122,18 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#070e17] min-h-screen">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-100">Users</h1>
+            <p className="mt-2 text-sm text-slate-400">Manage system users, roles, and active access profiles.</p>
+          </div>
           <Button onClick={() => setShowAddUser(!showAddUser)}>
             <Plus className="w-4 h-4 mr-2" />
             Add User
           </Button>
         </div>
-        <p className="text-gray-600">Manage system users and their roles.</p>
       </div>
 
       {/* Add User Form */}
@@ -185,9 +187,7 @@ const UsersPage: React.FC = () => {
                   value={addForm.role_id.toString()}
                   onValueChange={(val) => setAddForm({ ...addForm, role_id: parseInt(val)})}
                 >
-                  <SelectTrigger id="addRole">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
+                  <SelectTrigger id="addRole" className="bg-slate-950/80" />
                   <SelectContent>
                     {roles.map((role) => (
                       <SelectItem key={role.id} value={role.id.toString()}>
@@ -197,13 +197,14 @@ const UsersPage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 md:col-span-2">
+              <div className="flex flex-col gap-3 md:flex-row md:col-span-2">
                 <Button type="submit" disabled={loading}>
                   {loading ? "Creating..." : "Create User"}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setShowAddUser(false)}
+                  className="w-full md:w-auto"
                 >
                   Cancel
                 </Button>
@@ -291,50 +292,50 @@ const UsersPage: React.FC = () => {
         </Card>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="rounded-[28px] border border-white/10 bg-slate-950/90 shadow-[0_24px_80px_-28px_rgba(2,6,23,0.95)] overflow-hidden">
+        <table className="min-w-full divide-y divide-slate-800">
+          <thead className="bg-slate-950/80">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Username
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Full Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-slate-800 bg-slate-900/80">
             {users.map((user) => (
-            <tr key={user.id}>
+            <tr key={user.id} className="hover:bg-slate-900/70 transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-sm font-semibold text-slate-100">
                   {user.username}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">{user.email}</div>
+                <div className="text-sm text-slate-400">{user.email}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-slate-400">
                   {user.full_name || "-"}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                <span className="inline-flex rounded-full bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-300 ring-1 ring-cyan-500/20">
                   {user.role.name}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"

@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const isDashboardRoute = location.pathname.startsWith("/dashboard/");
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-100">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.14),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.14),_transparent_24%),linear-gradient(180deg,#020617_0%,#060b16_55%,#090f19_100%)] text-slate-100">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

@@ -259,16 +259,24 @@ const StoresPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#070e17] min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Stores</h1>
-        <p className="text-gray-600">Manage your retail stores, shelves, and cameras.</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-100 mb-2">Stores</h1>
+            <p className="text-sm text-slate-400">Manage your retail stores, shelves, and cameras from one polished operations hub.</p>
+          </div>
+          <Button onClick={() => setSelectedStore(stores[0] || null)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Activate First Store
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stores List */}
         <div className="lg:col-span-1">
-          <Card className="mb-6">
+          <Card className="mb-6 bg-slate-950/90 border border-white/10">
             <CardHeader>
               <CardTitle>Create New Store</CardTitle>
             </CardHeader>
@@ -351,48 +359,49 @@ const StoresPage: React.FC = () => {
             <div className="space-y-6">
               {/* Edit Store Form */}
               {editingStore && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Edit Store</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleUpdateStore} className="space-y-4">
-                      <div>
-                        <Label htmlFor="editStoreName">Store Name</Label>
-                        <Input
-                          id="editStoreName"
-                          type="text"
-                          value={editStoreName}
-                          onChange={(e) => setEditStoreName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editStoreLocation">Location</Label>
-                        <Input
-                          id="editStoreLocation"
-                          type="text"
-                          value={editStoreLocation}
-                          onChange={(e) => setEditStoreLocation(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button type="submit" disabled={loading}>
-                          {loading ? "Updating..." : "Update Store"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setEditingStore(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
+                    <Card className="bg-slate-950/90 border border-white/10">
+                      <CardHeader>
+                        <CardTitle>Edit Store</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleUpdateStore} className="space-y-4">
+                          <div>
+                            <Label htmlFor="editStoreName">Store Name</Label>
+                            <Input
+                              id="editStoreName"
+                              type="text"
+                              value={editStoreName}
+                              onChange={(e) => setEditStoreName(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="editStoreLocation">Location</Label>
+                            <Input
+                              id="editStoreLocation"
+                              type="text"
+                              value={editStoreLocation}
+                              onChange={(e) => setEditStoreLocation(e.target.value)}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-3 md:flex-row">
+                            <Button type="submit" disabled={loading}>
+                              {loading ? "Updating..." : "Update Store"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditingStore(null)}
+                              className="w-full md:w-auto"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  )}
 
-              {/* Shelves Section */}
+                  {/* Shelves Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -468,15 +477,15 @@ const StoresPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {shelves.map((shelf) => (
-                      <Card key={shelf.id}>
+                      <Card key={shelf.id} className="bg-slate-950/90 border border-white/10">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-base">{shelf.name}</CardTitle>
+                          <CardTitle className="text-base text-slate-100">{shelf.name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-600 text-sm mb-2">
+                          <p className="text-slate-400 text-sm mb-2">
                             {shelf.description || "No description"}
                           </p>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               variant="outline"
                               size="sm"
@@ -598,18 +607,18 @@ const StoresPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {cameras.map((camera) => (
-                      <Card key={camera.id}>
+                      <Card key={camera.id} className="bg-slate-950/90 border border-white/10">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-base">{camera.name}</CardTitle>
+                          <CardTitle className="text-base text-slate-100">{camera.name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-600 text-sm mb-2">
+                          <p className="text-slate-400 text-sm mb-2">
                             {camera.description || "No description"}
                           </p>
-                          <p className="text-gray-500 text-xs mb-2 break-all">
+                          <p className="text-slate-500 text-xs mb-2 break-all">
                             Stream: {camera.stream_url}
                           </p>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               variant="outline"
                               size="sm"
@@ -635,9 +644,9 @@ const StoresPage: React.FC = () => {
               </Card>
             </div>
           ) : (
-            <Card>
+            <Card className="bg-slate-950/90 border border-white/10">
               <CardContent className="flex items-center justify-center h-64">
-                <p className="text-gray-500">Select a store to view details</p>
+                <p className="text-slate-500">Select a store to view details</p>
               </CardContent>
             </Card>
           )}

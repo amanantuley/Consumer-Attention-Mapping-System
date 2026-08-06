@@ -67,7 +67,7 @@ const Sidebar: React.FC = () => {
     <div className="flex">
       <div
         className={cn(
-          "fixed z-50 h-screen border-r border-white/10 bg-slate-950/80 backdrop-blur-2xl transition-all duration-300 md:relative",
+          "fixed z-50 h-screen border-r border-white/10 bg-slate-950/90 backdrop-blur-2xl transition-all duration-300 md:relative",
           isOpen ? "w-72" : "w-20"
         )}
       >
@@ -79,7 +79,7 @@ const Sidebar: React.FC = () => {
             {isOpen && (
               <div className="ml-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-400">SignalOS</p>
-                <p className="text-sm font-semibold text-slate-100">Attention Mapping</p>
+                <p className="text-sm font-semibold text-slate-100">Attention Intelligence</p>
               </div>
             )}
           </div>
@@ -90,6 +90,12 @@ const Sidebar: React.FC = () => {
             {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
+
+        {isOpen && (
+          <div className="px-4 pb-4 border-b border-white/10 text-[11px] uppercase tracking-[0.3em] text-slate-500">
+            <p>Secure insights for every role</p>
+          </div>
+        )}
 
         <nav className="mt-6 space-y-1 px-3">
           {filteredItems.map((item) => {
@@ -114,16 +120,17 @@ const Sidebar: React.FC = () => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4 bg-slate-950/80">
+          <div className="mb-3 px-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">Current role</div>
           <button
             onClick={logout}
             className={cn(
-              "flex w-full items-center rounded-2xl px-3 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10",
+              "flex w-full items-center justify-center rounded-2xl px-3 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10",
               !isOpen && "justify-center"
             )}
           >
             <LogOut className="h-5 w-5" />
-            {isOpen && <span className="ml-3">Log Out</span>}
+            {isOpen && <span className="ml-3">Sign out</span>}
           </button>
         </div>
       </div>

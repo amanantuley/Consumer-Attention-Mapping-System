@@ -12,6 +12,7 @@ const RetailAnalystDashboard = lazy(() => import("./pages/RetailAnalystDashboard
 const MarketingManagerDashboard = lazy(() => import("./pages/MarketingManagerDashboard"));
 const StoresPage = lazy(() => import("./pages/StoresPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
+const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -84,6 +85,14 @@ const App: React.FC = () => {
                         element={
                           <ProtectedRoute allowedRoles={["Administrator"]}>
                             <UsersPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/analytics"
+                        element={
+                          <ProtectedRoute allowedRoles={["Administrator", "Retail Analyst", "Marketing Manager"]}>
+                            <AnalyticsDashboard />
                           </ProtectedRoute>
                         }
                       />

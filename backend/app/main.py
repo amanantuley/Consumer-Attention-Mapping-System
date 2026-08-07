@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api.v1 import auth, stores, video, users, roles
+from .api.v1 import analytics, auth, stores, video, users, roles
 from .services.batch_writer import BatchWriterWorker
 
 batch_worker = BatchWriterWorker()
@@ -37,6 +37,7 @@ app.include_router(roles.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(stores.router, prefix="/api/v1")
 app.include_router(video.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -51,3 +51,31 @@ export interface Camera {
   created_at: string;
   updated_at: string | null;
 }
+
+export interface AnalyticsSummary {
+  store_id: number;
+  total_shoppers: number;
+  total_records: number;
+  total_zones: number;
+  average_dwell_seconds: number;
+  top_zone: string;
+  recommendations_count: number;
+}
+
+export interface AnalyticsRecommendation {
+  zone: string;
+  issue: string;
+  action: string;
+  confidence: number;
+}
+
+export interface HeatmapPoint {
+  x: number;
+  y: number;
+  count: number;
+}
+
+export interface StoreOccupancy {
+  store_id: number;
+  occupancy: number;
+}
